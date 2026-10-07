@@ -1,0 +1,8 @@
+[Unit]
+Description=REAL NPC World Engine
+After=network.target
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/real-npc-mvp
+ExecStart=/usr/bin/node /opt/real-npc-mvp/world/engine.mjs
+Environment=WORLD_STATE=/var/lib/real-npc/world-state.json
