@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import {BuildingRenderer,INITIAL_BUILDINGS,derivedTownState,getTownTier} from "./buildings";
+import {TownScenery} from "./townscape";
 type P={id:number;name:string;job:string;x:number;y:number;gold:number;mood:string;trait:string;voice:string;relation:string;line:string;skin:string;hair:string;cloth:string;accent:string;icon:string};
 const base:P[]=[
 {id:0,name:"ガンツ",job:"鍛冶屋",x:27,y:38,gold:420,mood:"上機嫌",trait:"短気・職人気質",voice:"ぶっきらぼう",relation:"ミラとは幼なじみ",line:"勇者が来たな。今日は一本売れるかもな。",skin:"#d9a06f",hair:"#34251d",cloth:"#5f3d2d",accent:"#d57a31",icon:"⚒"},
@@ -32,9 +33,8 @@ export default function Home(){
  return <main className={night?"night":""}>
  <header><div><b>REAL NPC</b><span> LIVING WORLD / ALPHA</span></div><div className="live">● LIVE　DAY {day}　{String(hour).padStart(2,"0")}:{String((tick*2)%60).padStart(2,"0")}</div></header>
  <section className="stats"><div><small>人口</small><strong>{town.population}</strong><em>人</em></div><div><small>町財政</small><strong>{gdp.toLocaleString()}</strong><em>G</em></div><div><small>都市段階</small><strong>{townTier}</strong></div><div><small>注目人物</small><strong>{focus===null?"ガンツ":base[focus].name}</strong></div></section>
- <section className="world"><div className="map"><div className="river"/><div className="road h"/><div className="road v"/>
+ <section className="world"><div className="map"><TownScenery town={town} night={night}/>
  {INITIAL_BUILDINGS.map(b=><BuildingRenderer key={b.id} building={b} town={town}/>)}
- <div className="gate">西門</div>
  {people.map(p=><button key={p.id} className={"person "+(focus===p.id?"focused":"")} style={{left:p.x+"%",top:p.y+"%"}} onClick={()=>{setSel(p);setFocus(p.id)}}>
  <Sprite p={p}/><label>{p.name}<small>{p.job}</small></label>{[0,5,8,9].includes(p.id)&&<span className="bubble">{p.line}</span>}</button>)}
  <div className="trees">♣　♠　♣　　　　　♠<br/>　　♣　　　　　　　　　♣</div></div>
