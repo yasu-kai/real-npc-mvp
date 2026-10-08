@@ -2,7 +2,8 @@
 import {useEffect,useState} from "react";
 import {BuildingRenderer,INITIAL_BUILDINGS,derivedTownState,getTownTier} from "./buildings";
 import {TownScenery} from "./townscape";
-type P={id:number;name:string;job:string;x:number;y:number;gold:number;mood:string;trait:string;voice:string;relation:string;line:string;skin:string;hair:string;cloth:string;accent:string;icon:string};
+import {nextPosition} from "./movement";
+type P={id:number;name:string;job:string;x:number;y:number;gold:number;mood:string;trait:string;voice:string;relation:string;line:string;skin:string;hair:string;cloth:string;accent:string;icon:string;routeIndex?:number;moving?:boolean;dir?:string};
 const base:P[]=[
 {id:0,name:"ガンツ",job:"鍛冶屋",x:27,y:38,gold:420,mood:"上機嫌",trait:"短気・職人気質",voice:"ぶっきらぼう",relation:"ミラとは幼なじみ",line:"勇者が来たな。今日は一本売れるかもな。",skin:"#d9a06f",hair:"#34251d",cloth:"#5f3d2d",accent:"#d57a31",icon:"⚒"},
 {id:1,name:"ミラ",job:"薬屋",x:62,y:31,gold:310,mood:"忙しい",trait:"商売上手・情報通",voice:"早口で現実的",relation:"ガンツの値付けに口を出す",line:"ポーションは鮮度が命。値切るなら昨日来て。",skin:"#e4b38a",hair:"#5b2e51",cloth:"#6b4c7a",accent:"#8bd3c7",icon:"✦"},
@@ -27,7 +28,7 @@ const events=[
 ];
 export default function Home(){
  const [tick,setTick]=useState(18432),[people,setPeople]=useState(base),[feed,setFeed]=useState(events.slice(0,5)),[sel,setSel]=useState<P|null>(null),[focus,setFocus]=useState<number|null>(null);
- useEffect(()=>{const t=setInterval(()=>{setTick(v=>v+1);setPeople(ps=>ps.map(p=>({...p,x:Math.max(5,Math.min(91,p.x+(Math.random()-.48)*1.7)),y:Math.max(16,Math.min(84,p.y+(Math.random()-.5)*1.15))})));if(Math.random()>.62)setFeed(f=>[events[Math.floor(Math.random()*events.length)],...f].slice(0,6))},1200);return()=>clearInterval(t)},[]);
+ useEffect(()=>{const t=setInterval(()=>{setTick(v=>v+1);setPeople(ps=>ps.map(p=>{const m=nextPosition(p.id,p.x,p.y,p.routeIndex??0,p.id>=5&&p.id<=7?.95:.72);return {...p,x:m.x,y:m.y,routeIndex:m.index,moving:m.moving,dir:m.dir}}));if(Math.random()>.62)setFeed(f=>[events[Math.floor(Math.random()*events.length)],...f].slice(0,6))},500);return()=>clearInterval(t)},[]);
  const hour=Math.floor((tick/30)%24),day=Math.floor(tick/720)+1,night=hour<6||hour>18;
  const town=derivedTownState(tick),gdp=town.treasury,townTier=getTownTier(town.population);
  return <main className={night?"night":""}>
@@ -35,7 +36,7 @@ export default function Home(){
  <section className="stats"><div><small>人口</small><strong>{town.population}</strong><em>人</em></div><div><small>町財政</small><strong>{gdp.toLocaleString()}</strong><em>G</em></div><div><small>都市段階</small><strong>{townTier}</strong></div><div><small>注目人物</small><strong>{focus===null?"ガンツ":base[focus].name}</strong></div></section>
  <section className="world"><div className="map"><TownScenery town={town} night={night}/>
  {INITIAL_BUILDINGS.map(b=><BuildingRenderer key={b.id} building={b} town={town}/>)}
- {people.map(p=><button key={p.id} className={"person "+(focus===p.id?"focused":"")} style={{left:p.x+"%",top:p.y+"%"}} onClick={()=>{setSel(p);setFocus(p.id)}}>
+ {people.map(p=><button key={p.id} className={"person "+(focus===p.id?"focused ":"")+(p.moving?"walking ":"")+(p.dir==="left"?"face-left":"face-right")} style={{left:p.x+"%",top:p.y+"%"}} onClick={()=>{setSel(p);setFocus(p.id)}}>
  <Sprite p={p}/><label>{p.name}<small>{p.job}</small></label>{[0,5,8,9].includes(p.id)&&<span className="bubble">{p.line}</span>}</button>)}
  <div className="trees">♣　♠　♣　　　　　♠<br/>　　♣　　　　　　　　　♣</div></div>
  <aside><h2>町のいま</h2><div className="townpulse"><span>繁栄 <b>{town.prosperity}</b></span><span>文化 <b>{town.culture}</b></span><span>治安 <b>{town.security}</b></span></div>{feed.map((e,i)=><div className="event" key={i}><time>{i?(i*3+1)+"分前":"たった今"}</time><p>{e}</p></div>)}<h2>CHARACTER WATCH</h2><div className="watch">{base.slice(0,5).map(p=><button key={p.id} onClick={()=>{setSel(p);setFocus(p.id)}}><Sprite p={p}/><span>{p.name}<small>{p.mood}</small></span></button>)}</div></aside></section>
